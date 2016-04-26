@@ -1,0 +1,70 @@
+From 32e095f3538a257f43c22a684fde677de1388cf4 Mon Sep 17 00:00:00 2001
+From: Jospeh Z <gotouch@y7mail.com>
+Date: Wed, 14 Nov 2012 13:25:10 +1100
+Subject: [PATCH] [feeds importer patch] supports the term id while using
+ feeds importer with content taxonomy field
+
+---
+ .gitignore                                              |  1 +
+ .../modules/contrib/feeds/mappers/content_taxonomy.inc  | 17 ++++++++++++-----
+ 2 files changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/.gitignore b/.gitignore
+index fa05090..cc00dc2 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -38,3 +38,4 @@ Thumbs.db
+ 
+ # Developer working folders ####################################################
+ docroot/service
++docroot/sites/all/modules/developer/examples
+diff --git a/docroot/sites/all/modules/contrib/feeds/mappers/content_taxonomy.inc b/docroot/sites/all/modules/contrib/feeds/mappers/content_taxonomy.inc
+index b3f525e..aadf98c 100644
+--- a/docroot/sites/all/modules/contrib/feeds/mappers/content_taxonomy.inc
++++ b/docroot/sites/all/modules/contrib/feeds/mappers/content_taxonomy.inc
+@@ -46,16 +46,16 @@ function content_taxonomy_feeds_node_processor_targets_alter(&$targets, $content
+  */
+ function content_taxonomy_feeds_set_target(&$node, $field_name, $terms) {
+   static $fields = array();
+-
++  
+   $field = content_fields($field_name, $node->type);
+ 
+   // Parse string for multiple tags (comma separated)
+-  if (is_string($terms)) {
++  if (is_string($terms) || is_numeric($terms)) {
+     $terms = explode(',', $terms);
+   }
+ 
+   // Return if there are no or empty terms.
+-  if (!is_array($terms) || empty($terms)) {
++  if (!is_array($terms) || empty($terms)) {;
+     return;
+   }
+ 
+@@ -108,12 +108,19 @@ function content_taxonomy_feeds_set_target(&$node, $field_name, $terms) {
+  *
+  * @return
+  *   An array of matching term objects.
++ * @package 
++ *   add the support for term id; however, once the term name is number, maybe cause some issues.
+  */
+ function content_taxonomy_get_term_by_name_vid($name, $vid) {
+-  $db_result = db_query(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE LOWER(t.name) = LOWER('%s') AND vid=%d", 't', 'tid'), trim($name), $vid);
++	if (is_numeric($name)) {
++		$db_result = db_query(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE t.tid = '%d' AND vid=%d", 't', 'tid'), $name, $vid);
++	}
++	elseif (is_string($name)) {
++  	$db_result = db_query(db_rewrite_sql("SELECT t.tid, t.name FROM {term_data} t WHERE LOWER(t.name) = LOWER('%s') AND vid=%d", 't', 'tid'), trim($name), $vid);
++	}
+   $result = array();
+   while ($term = db_fetch_array($db_result)) {
+     $result[] = $term;
+   }
+   return $result;
+-}
++}
+\ No newline at end of file
+-- 
+1.7.11.1
+

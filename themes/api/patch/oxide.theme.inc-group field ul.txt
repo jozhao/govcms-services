@@ -1,0 +1,21 @@
+
+/**
+ * Implements theme_item_list()
+ */
+function oxide_item_list($items = array(), $title = NULL, $type = 'ul', $attributes = NULL) {
+	$pos = strpos($attributes['class'],'group_resources');
+	if ($pos !== false) {
+		$output = '<ul>';
+		foreach ($items as $item) {
+			preg_match('/field-field-resource-title">(.*)<\/div>/isU',$item, $res_title);
+			preg_match('/field-field-resource-url">(.*)<\/div>/isU',$item, $res_url);
+			$res_title = empty($res_title) ? $res_url : $res_title;
+			$output .= '<li>';
+			$output .= '<a href="'.$res_url[1].'">'.$res_title[1].'</a>';
+			$output .= '</li>';
+	  }
+	  $output .= '</ul>';
+	  
+		return $output;
+	}
+}
